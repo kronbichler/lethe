@@ -32,6 +32,8 @@
 
 #include <dem/dem.h>
 #include <dem/dem_properties.h>
+#include <fem-dem/find_void_fraction.h>
+#include <fem-dem/find_void_fraction_PCM.h>
 
 #include <deal.II/distributed/tria.h>
 
@@ -142,7 +144,6 @@ protected:
    *Member Variables
    */
 
-protected:
 private:
   DoFHandler<dim> void_fraction_dof_handler;
   FE_Q<dim>       fe_void_fraction;
@@ -181,6 +182,9 @@ private:
 
   std::shared_ptr<TrilinosWrappers::PreconditionILU> ilu_preconditioner;
   AffineConstraints<double>                          void_fraction_constraints;
+
+  // Void fraction calculation object
+  std::shared_ptr<FindVoidFraction<dim>> void_fraction_calculation_object;
 
   const bool   PSPG        = true;
   const bool   SUPG        = true;

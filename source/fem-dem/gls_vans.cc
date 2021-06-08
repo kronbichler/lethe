@@ -15,7 +15,10 @@ GLSVANSSolver<dim>::GLSVANSSolver(SimulationParameters<dim> &p_nsparam)
   , particle_handler(*this->triangulation,
                      particle_mapping,
                      DEM::get_number_properties())
-{}
+{
+  void_fraction_calculation_object =
+    std::make_shared<FindVoidFractionPCM<dim>>();
+}
 
 template <int dim>
 GLSVANSSolver<dim>::~GLSVANSSolver()
@@ -317,7 +320,6 @@ GLSVANSSolver<dim>::assemble_L2_projection_void_fraction()
   const MappingQ<dim> mapping(
     this->velocity_fem_degree,
     this->simulation_parameters.fem_parameters.qmapping_all);
-
   FEValues<dim> fe_values_void_fraction(mapping,
                                         this->fe_void_fraction,
                                         quadrature_formula,
@@ -327,72 +329,21 @@ GLSVANSSolver<dim>::assemble_L2_projection_void_fraction()
 
   const unsigned int dofs_per_cell = this->fe_void_fraction.dofs_per_cell;
   const unsigned int n_q_points    = quadrature_formula.size();
-  FullMatrix<double> local_matrix_void_fraction(dofs_per_cell, dofs_per_cell);
-  Vector<double>     local_rhs_void_fraction(dofs_per_cell);
-  std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
-  std::vector<double>                  phi_vf(dofs_per_cell);
+
 
   system_rhs_void_fraction    = 0;
   system_matrix_void_fraction = 0;
 
-  for (const auto &cell :
-       this->void_fraction_dof_handler.active_cell_iterators())
-    {
-      if (cell->is_locally_owned())
-        {
-          fe_values_void_fraction.reinit(cell);
+  void_fraction_calculation_object->calculate_void_fraction(
+    fe_values_void_fraction,
+    dofs_per_cell,
+    n_q_points,
+    this->void_fraction_dof_handler,
+    particle_handler,
+    void_fraction_constraints,
+    system_matrix_void_fraction,
+    system_rhs_void_fraction);
 
-          local_matrix_void_fraction = 0;
-          local_rhs_void_fraction    = 0;
-
-          double particles_volume_in_cell = 0;
-
-          // Loop over particles in cell
-          // Begin and end iterator for particles in cell
-          const auto pic = particle_handler.particles_in_cell(cell);
-          for (auto &particle : pic)
-            {
-              auto particle_properties = particle.get_properties();
-              particles_volume_in_cell +=
-                M_PI * pow(particle_properties[DEM::PropertiesIndex::dp], dim) /
-                (2 * dim);
-            }
-          double cell_volume = cell->measure();
-
-          // Calculate cell void fraction
-          double cell_void_fraction =
-            (cell_volume - particles_volume_in_cell) / cell_volume;
-
-          for (unsigned int q = 0; q < n_q_points; ++q)
-            {
-              for (unsigned int k = 0; k < dofs_per_cell; ++k)
-                {
-                  // fe_values_void_fraction.get_function_values(
-                  //  nodal_void_fraction_relevant, phi_vf);
-                  phi_vf[k] = fe_values_void_fraction.shape_value(k, q);
-                }
-              for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                {
-                  // Matrix assembly
-                  for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                    {
-                      local_matrix_void_fraction(i, j) +=
-                        (phi_vf[j] * phi_vf[i]) *
-                        fe_values_void_fraction.JxW(q);
-                    }
-                  local_rhs_void_fraction(i) += phi_vf[i] * cell_void_fraction *
-                                                fe_values_void_fraction.JxW(q);
-                }
-            }
-          cell->get_dof_indices(local_dof_indices);
-          void_fraction_constraints.distribute_local_to_global(
-            local_matrix_void_fraction,
-            local_rhs_void_fraction,
-            local_dof_indices,
-            system_matrix_void_fraction,
-            system_rhs_void_fraction);
-        }
-    }
   system_matrix_void_fraction.compress(VectorOperation::add);
   system_rhs_void_fraction.compress(VectorOperation::add);
 }

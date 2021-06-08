@@ -44,6 +44,7 @@ end
 # Void Fraction
 #---------------------------------------------------
 subsection void fraction
+   set method = PCM
    set mode = function
      subsection function
      set Function expression = (1 - 0.1*cos(2*pi*t)*exp(-sin(pi*x)*sin(pi*y)))/exp(1)

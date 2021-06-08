@@ -30,6 +30,7 @@ end
 # Void Fraction
 #---------------------------------------------------
 subsection void fraction
+   set method = PCM
    set mode = function
      subsection function
      set Function expression = 0.5

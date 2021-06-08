@@ -16,8 +16,16 @@ GLSVANSSolver<dim>::GLSVANSSolver(SimulationParameters<dim> &p_nsparam)
                      particle_mapping,
                      DEM::get_number_properties())
 {
-  void_fraction_calculation_object =
-    std::make_shared<FindVoidFractionPCM<dim>>();
+  if (this->simulation_parameters.void_fraction
+        ->void_fraction_calculation_method ==
+      Parameters::VoidFractionCalculationMethod::PCM)
+    void_fraction_calculation_object =
+      std::make_shared<FindVoidFractionPCM<dim>>();
+  else if (this->simulation_parameters.void_fraction
+             ->void_fraction_calculation_method ==
+           Parameters::VoidFractionCalculationMethod::offset)
+    void_fraction_calculation_object =
+      std::make_shared<FindVoidFractionOffset<dim>>();
 }
 
 template <int dim>

@@ -30,6 +30,7 @@ end
 # Void Fraction
 #---------------------------------------------------
 subsection void fraction
+   set method = PCM
    set mode = function
      subsection function
      set Function expression = exp(-sin(pi*x)*sin(pi*y))/exp(1)

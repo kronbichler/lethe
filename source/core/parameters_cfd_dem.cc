@@ -7,6 +7,11 @@ namespace Parameters
   VoidFraction<dim>::declare_parameters(ParameterHandler &prm)
   {
     prm.enter_subsection("void fraction");
+    prm.declare_entry("method",
+                      "offset",
+                      Patterns::Selection("PCM|offset"),
+                      "Choosing void fraction calculation method"
+                      "Choices are <PCM|offset>.");
     prm.declare_entry(
       "mode",
       "function",
@@ -30,6 +35,15 @@ namespace Parameters
   void
   VoidFraction<dim>::parse_parameters(ParameterHandler &prm)
   {
+    const std::string vfcm = prm.get("method");
+    if (vfcm == "PCM")
+      void_fraction_calculation_method = VoidFractionCalculationMethod::PCM;
+    else if (vfcm == "offset")
+      void_fraction_calculation_method = VoidFractionCalculationMethod::offset;
+    else
+      {
+        throw(std::runtime_error("Invalid void fraction calculation method "));
+      }
     prm.enter_subsection("void fraction");
     const std::string op = prm.get("mode");
     if (op == "function")

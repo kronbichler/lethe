@@ -38,6 +38,12 @@ using namespace dealii;
 
 namespace Parameters
 {
+  enum class VoidFractionCalculationMethod
+  {
+    PCM,
+    offset
+  };
+
   enum class VoidFractionMode
   {
     function,
@@ -61,6 +67,7 @@ namespace Parameters
 
 
   public:
+    VoidFractionCalculationMethod  void_fraction_calculation_method;
     VoidFractionMode               mode;
     Functions::ParsedFunction<dim> void_fraction;
     bool                           read_dem;

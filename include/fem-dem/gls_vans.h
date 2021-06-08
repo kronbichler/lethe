@@ -34,6 +34,7 @@
 #include <dem/dem_properties.h>
 #include <fem-dem/find_void_fraction.h>
 #include <fem-dem/find_void_fraction_PCM.h>
+#include <fem-dem/find_void_fraction_offset.h>
 
 #include <deal.II/distributed/tria.h>
 
